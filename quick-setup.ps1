@@ -1,8 +1,9 @@
 # JTAS Quick Setup Script for Windows PowerShell
-# Run this script in PowerShell as Administrator
+# JIRA Task Automation System - Python Flask + React
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "     JTAS Quick Setup for Windows" -ForegroundColor Cyan  
+Write-Host "  Python Flask + React Environment" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -25,38 +26,31 @@ function Test-Command($command) {
     }
 }
 
-# Check and install Java
-Write-Host "[1/4] Checking Java..." -ForegroundColor Green
-if (Test-Command "java") {
-    Write-Host "✅ Java is installed" -ForegroundColor Green
-    java -version
+# Check and install Python
+Write-Host "[1/4] Checking Python..." -ForegroundColor Green
+if (Test-Command "python") {
+    Write-Host "✅ Python is installed" -ForegroundColor Green
+    python --version
 } else {
-    Write-Host "❌ Java not found. Installing..." -ForegroundColor Red
+    Write-Host "❌ Python not found. Installing..." -ForegroundColor Red
     try {
-        winget install Microsoft.OpenJDK.17
-        Write-Host "✅ Java installed successfully" -ForegroundColor Green
+        winget install Python.Python.3.11
+        Write-Host "✅ Python installed successfully" -ForegroundColor Green
         Write-Host "⚠️  Please restart your terminal" -ForegroundColor Yellow
     } catch {
-        Write-Host "❌ Failed to install Java. Please install manually from https://adoptium.net/" -ForegroundColor Red
+        Write-Host "❌ Failed to install Python. Please install manually from https://python.org/" -ForegroundColor Red
     }
 }
 
 Write-Host ""
 
-# Check and install Maven
-Write-Host "[2/4] Checking Maven..." -ForegroundColor Green
-if (Test-Command "mvn") {
-    Write-Host "✅ Maven is installed" -ForegroundColor Green
-    mvn -version
+# Check pip
+Write-Host "[2/4] Checking pip..." -ForegroundColor Green
+if (Test-Command "pip") {
+    Write-Host "✅ pip is installed" -ForegroundColor Green
+    pip --version
 } else {
-    Write-Host "❌ Maven not found. Installing..." -ForegroundColor Red
-    try {
-        winget install Apache.Maven
-        Write-Host "✅ Maven installed successfully" -ForegroundColor Green
-        Write-Host "⚠️  Please restart your terminal" -ForegroundColor Yellow
-    } catch {
-        Write-Host "❌ Failed to install Maven. Please install manually" -ForegroundColor Red
-    }
+    Write-Host "❌ pip not found" -ForegroundColor Red
 }
 
 Write-Host ""
@@ -98,7 +92,9 @@ Write-Host ""
 
 Write-Host "Next steps:" -ForegroundColor Yellow
 Write-Host "1. If any tools were installed, restart your terminal" -ForegroundColor White
-Write-Host "2. Run: .\start-services.ps1" -ForegroundColor White
+Write-Host "2. Run: python start.py" -ForegroundColor White
+Write-Host "3. Access frontend at: http://localhost:3000" -ForegroundColor White
+Write-Host "4. Access backend API at: http://localhost:5000" -ForegroundColor White
 Write-Host ""
 
 Read-Host "Press Enter to continue"

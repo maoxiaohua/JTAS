@@ -1,24 +1,16 @@
-# Java
-*.class
-*.jar
-*.war
-*.ear
-*.zip
-*.tar.gz
-*.rar
-hs_err_pid*
-
-# Maven
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # IDE
 .idea/
@@ -50,11 +42,21 @@ logs/
 .env.test.local
 .env.production.local
 
+# Frontend
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+
+# Data files
+*.csv
+*.xlsx
+
+# Reports
+jira_analysis_report.xlsx
+
 # Application specific
-application-local.yml
-application-dev.properties
-application-test.properties
-application-prod.properties
+*.config
+config.json
 
 # Temporary files
 *.tmp
@@ -80,3 +82,6 @@ coverage/
 *.p12
 *.jks
 secrets/
+
+# Claude settings
+.claude/

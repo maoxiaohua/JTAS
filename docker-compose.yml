@@ -1,189 +1,40 @@
 version: '3.8'
 
 services:
-  # PostgreSQL数据库
-  postgres:
-    image: postgres:15-alpine
-    container_name: jtas-postgres
-    environment:
-      POSTGRES_DB: jtas_db
-      POSTGRES_USER: jtas_user
-      POSTGRES_PASSWORD: jtas_password
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d
-    networks:
-      - jtas-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jtas_user -d jtas_db"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Redis缓存
-  redis:
-    image: redis:7-alpine
-    container_name: jtas-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password}
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - jtas-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Spring Boot后端应用
+  # Flask后端应用
   jtas-backend:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: jtas-backend
-    environment:
-      # 数据库配置
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: jtas_db
-      DB_USERNAME: jtas_user
-      DB_PASSWORD: jtas_password
-      
-      # Redis配置
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      
-      # 应用配置
-      SPRING_PROFILES_ACTIVE: docker
-      SERVER_PORT: 8080
-      
-      # JIRA集成配置
-      JIRA_BASE_URL: ${JIRA_BASE_URL:-https://your-company.atlassian.net}
-      JIRA_CLIENT_ID: ${JIRA_CLIENT_ID}
-      JIRA_CLIENT_SECRET: ${JIRA_CLIENT_SECRET}
-      
-      # JWT配置
-      JWT_SECRET: ${JWT_SECRET:-mySecretKey}
-      
-      # CORS配置
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001}
-      
     ports:
-      - "8080:8080"
-    volumes:
-      - ./logs:/app/logs
-      - ./uploads:/app/uploads
-    networks:
-      - jtas-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/metrics"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 30s
 
-  # React前端应用 (开发模式)
-  jtas-frontend-dev:
+  # React前端 (开发模式，可选)
+  jtas-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: jtas-frontend-dev
-    environment:
-      - REACT_APP_API_BASE_URL=http://localhost:8080/api/v1
-      - REACT_APP_ENVIRONMENT=development
-      - CHOKIDAR_USEPOLLING=true
+    container_name: jtas-frontend
     ports:
       - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+      - CHOKIDAR_USEPOLLING=true
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    networks:
-      - jtas-network
     depends_on:
       - jtas-backend
     profiles:
       - dev
-
-  # Nginx反向代理 (生产模式)
-  jtas-nginx:
-    image: nginx:alpine
-    container_name: jtas-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./frontend/build:/usr/share/nginx/html
-      - ./ssl:/etc/nginx/ssl
-    networks:
-      - jtas-network
-    depends_on:
-      - jtas-backend
-    restart: unless-stopped
-    profiles:
-      - prod
-
-  # Prometheus监控 (可选)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: jtas-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    networks:
-      - jtas-network
-    profiles:
-      - monitoring
-
-  # Grafana仪表板 (可选)
-  grafana:
-    image: grafana/grafana:latest
-    container_name: jtas-grafana
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/dashboards:/etc/grafana/provisioning/dashboards
-      - ./monitoring/datasources:/etc/grafana/provisioning/datasources
-    networks:
-      - jtas-network
-    depends_on:
-      - prometheus
-    profiles:
-      - monitoring
-
-volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
-    driver: local
-
-networks:
-  jtas-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16

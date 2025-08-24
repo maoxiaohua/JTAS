@@ -18,7 +18,11 @@
       "Bash(del \"C:\\Users\\admin\\Documents\\JTAS\\pom.xml\")",
       "Bash(rm:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git clean:*)",
+      "Bash(git gc:*)",
+      "Bash(ls:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }
